@@ -1,0 +1,47 @@
+{% extends 'shop/layout.html.twig' %}
+
+{% block title %}Mes CSC | {{ parent() }}{% endblock %}
+
+{% block content %}
+    <div class="ui segment">
+        <h1 class="ui dividing header">Mes Compensations Éditeurs (CSC)</h1>
+        
+        {% if cscs is empty %}
+            <div class="ui info message">
+                <p>Vous n'avez pas encore de compensations éditeurs.</p>
+            </div>
+        {% else %}
+            <table class="ui celled table">
+                <thead>
+                    <tr>
+                        <th>Numéro CSC</th>
+                        <th>Date d'ouverture</th>
+                        <th>Date de clôture</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for csc in cscs %}
+                        <tr>
+                            <td>{{ csc.reference }}</td>
+                            <td>{{ csc.dateDebut|date('d/m/Y') }}</td>
+                            <td>{{ csc.dateFin|date('d/m/Y') }}</td>
+                            <td>
+                                <div class="ui label {% if csc.statut == 'Ouverte' %}blue{% elseif csc.statut == 'Déclarée' %}green{% elseif csc.statut == 'Clôturée' %}grey{% else %}yellow{% endif %}">
+                                    {{ csc.statut }}
+                                </div>
+                            </td>
+                            <td class="center aligned">
+                                <a href="{{ path('shop_account_csc_detail', {'reference': csc.reference}) }}" class="ui icon primary button" title="Voir le détail">
+                                    <i class="eye icon"></i>
+                                    Voir détail
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

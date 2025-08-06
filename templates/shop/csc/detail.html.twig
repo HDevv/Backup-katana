@@ -1,0 +1,65 @@
+{% extends 'shop/layout.html.twig' %}
+
+{% block title %}Détail CSC {{ csc.reference }} | {{ parent() }}{% endblock %}
+
+{% block content %}
+    <div class="ui segment">
+        <h1 class="ui dividing header">
+            {{ csc.reference }}
+            <div class="ui {{ csc.statut == 'Ouverte' ? 'blue' : (csc.statut == 'Déclarée' ? 'green' : (csc.statut == 'Clôturée' ? 'grey' : 'yellow')) }} label">
+                {{ csc.statut }}
+            </div>
+        </h1>
+
+        <div class="ui info message">
+            <p>Du {{ csc.dateDebut|date('d/m/Y') }} au {{ csc.dateFin|date('d/m/Y') }}</p>
+        </div>
+
+        <table class="ui celled structured table">
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Produit</th>
+                    <th class="right aligned">Prix avant</th>
+                    <th class="right aligned">Prix après</th>
+                    <th class="right aligned">Quantité</th>
+                    <th class="right aligned">Économie totale</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set totalEconomie = 0 %}
+                {% for produit in csc.produits %}
+                    {% set economie = produit.qteClient * (produit.prixAvant - produit.prixApres) %}
+                    {% set totalEconomie = totalEconomie + economie %}
+                    <tr>
+                        <td>{{ produit.reference }}</td>
+                        <td>{{ produit.libprod }}</td>
+                        <td class="right aligned">{{ produit.prixAvant|number_format(2, ',', ' ') }} €</td>
+                        <td class="right aligned">{{ produit.prixApres|number_format(2, ',', ' ') }} €</td>
+                        <td class="right aligned">{{ produit.qteClient }}</td>
+                        <td class="right aligned {% if economie > 0 %}positive{% endif %}">
+                            {% if produit.qteClient > 0 %}
+                                {{ economie|number_format(2, ',', ' ') }} €
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            {% if totalEconomie > 0 %}
+                <tfoot>
+                    <tr>
+                        <th colspan="5" class="right aligned">Économie totale :</th>
+                        <th class="right aligned positive">{{ totalEconomie|number_format(2, ',', ' ') }} €</th>
+                    </tr>
+                </tfoot>
+            {% endif %}
+        </table>
+
+        <a href="{{ path('shop_account_csc') }}" class="ui button">
+            <i class="left arrow icon"></i>
+            Retour à la liste
+        </a>
+    </div>
+{% endblock %}

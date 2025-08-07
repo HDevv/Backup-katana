@@ -1,3 +1,9 @@
+parameters:
+    # Configuration pour l'upload de fichiers CSC
+    csc_upload_directory: '%kernel.project_dir%/public/uploads/csc'
+    csc_max_file_size: 10485760  # 10MB en octets
+    csc_allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif']
+
 services:
     # Default configuration for services in *this* file
     _defaults:

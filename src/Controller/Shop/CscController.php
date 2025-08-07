@@ -14,12 +14,15 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Form\Shop\CscFilterType;
 use App\Form\Shop\CscSearchType;
+use App\Form\Shop\CscFileUploadType;
+use App\Service\CscFileUploadService;
 
 #[Route('/mon-compte')]
 class CscController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
+        private CscFileUploadService $fileUploadService,
     ) {
     }
 
@@ -95,9 +98,37 @@ class CscController extends AbstractController
             $direction = 'asc';
         }
 
+        // Formulaire d'upload de fichiers
+        $uploadForm = $this->createForm(CscFileUploadType::class);
+        $uploadForm->handleRequest($request);
+        
+        $uploadedFiles = [];
+        $uploadMessage = null;
+        
+        if ($uploadForm->isSubmitted() && $uploadForm->isValid()) {
+            $files = $uploadForm->get('files')->getData();
+            
+            if ($files) {
+                try {
+                    $uploadedFiles = $this->fileUploadService->uploadFiles($files);
+                    $uploadPath = $this->getParameter('csc_upload_directory');
+                    $uploadMessage = sprintf(
+                        '%d fichier(s) téléchargé(s) avec succès dans le dossier : %s',
+                        count($uploadedFiles),
+                        $uploadPath
+                    );
+                } catch (\Exception $e) {
+                    $uploadMessage = 'Erreur lors du téléchargement : ' . $e->getMessage();
+                }
+            }
+        }
+
         return $this->render('shop/csc/listeCsc.html.twig', [
             'cscs' => $formattedCscs,
             'form' => $searchForm->createView(),
+            'uploadForm' => $uploadForm->createView(),
+            'uploadedFiles' => $uploadedFiles,
+            'uploadMessage' => $uploadMessage,
             'current_sort' => $sort,
             'current_direction' => $direction
         ]);

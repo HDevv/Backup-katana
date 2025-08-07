@@ -102,5 +102,323 @@
             <p>Aucune compensation ne correspond à vos critères de recherche.</p>
         </div>
     {% endif %}
+    
+    {# Section d'upload de fichiers #}
+    <div class="ui segment">
+        <h2 class="ui header">
+            <i class="upload icon"></i>
+            <div class="content">
+                Joindre des fichiers
+                <div class="sub header">Téléchargez des documents PDF ou des images (max 10MB par fichier)</div>
+            </div>
+        </h2>
+        
+        {% if uploadMessage %}
+            <div class="ui {{ uploadedFiles|length > 0 ? 'positive' : 'negative' }} message">
+                {{ uploadMessage }}
+            </div>
+        {% endif %}
+        
+        {{ form_start(uploadForm, {'attr': {'class': 'ui form', 'id': 'csc-upload-form', 'enctype': 'multipart/form-data'}}) }}
+            <div class="field">
+                <div class="csc-file-upload-area" id="file-upload-area">
+                    <div class="upload-content">
+                        <i class="huge cloud upload icon"></i>
+                        <div class="header">Glissez-déposez vos fichiers ici</div>
+                        <div class="description">ou utilisez le bouton ci-dessous</div>
+                        {{ form_widget(uploadForm.files, {'attr': {'style': 'display: none;', 'id': 'csc-file-input', 'class': 'csc-file-input-field'}}) }}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button type="button" class="ui labeled icon button" id="select-files-button">
+                        <i class="folder open icon"></i>
+                        Sélectionner des fichiers
+                    </button>
+                </div>
+                
+                <div id="file-preview" class="file-preview" style="display: none;">
+                    <h4 class="ui header">Fichiers sélectionnés :</h4>
+                    <div id="file-list" class="ui divided list"></div>
+                </div>
+            </div>
+            
+            <button type="submit" class="ui button" id="upload-button" disabled>
+                <i class="upload icon"></i>
+                Télécharger les fichiers
+            </button>
+        {{ form_end(uploadForm) }}
+        
+        {% if uploadedFiles|length > 0 %}
+            <div class="ui segment">
+                <h3 class="ui header">Fichiers téléchargés :</h3>
+                <div class="ui divided list">
+                    {% for file in uploadedFiles %}
+                        <div class="item">
+                            <div class="right floated content">
+                                <span class="ui small label">{{ (file.size / 1024)|round(1) }} KB</span>
+                            </div>
+                            <i class="{% if file.mime_type starts with 'image/' %}image{% else %}file pdf{% endif %} icon"></i>
+                            <div class="content">
+                                <div class="header">{{ file.original_name }}</div>
+                                <div class="description">Téléchargé le {{ file.uploaded_at|date('d/m/Y à H:i') }}</div>
+                                {% if file.mime_type starts with 'image/' %}
+                                    <div class="ui small image" style="margin-top: 10px;">
+                                        <img src="{{ file.web_path }}" alt="{{ file.original_name }}" style="max-width: 200px; max-height: 150px;">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+.csc-file-upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+}
+
+.csc-file-upload-area:hover,
+.csc-file-upload-area.dragover {
+    border-color: #2185d0;
+    background-color: #f0f8ff;
+}
+
+.upload-content {
+    color: #999;
+}
+
+.upload-content .header {
+    font-size: 1.2em;
+    margin: 10px 0 5px 0;
+    color: #666;
+}
+
+.upload-content .description {
+    font-size: 0.9em;
+}
+
+.file-preview {
+    margin-top: 20px;
+}
+
+#upload-button {
+    background-color: #ccc !important;
+    color: #666 !important;
+    transition: all 0.3s ease;
+}
+
+#upload-button:not([disabled]) {
+    background-color: #21ba45 !important;
+    color: white !important;
+}
+
+#upload-button:not([disabled]):hover {
+    background-color: #16ab39 !important;
+}
+
+.file-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin: 5px 0;
+    background-color: #f9f9f9;
+}
+
+.file-item img {
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM chargé, initialisation du script d\'upload');
+    
+    const fileInput = document.getElementById('csc-file-input');
+    const uploadArea = document.getElementById('file-upload-area');
+    const uploadButton = document.getElementById('upload-button');
+    const selectFilesButton = document.getElementById('select-files-button');
+    const filePreview = document.getElementById('file-preview');
+    const fileList = document.getElementById('file-list');
+    
+    // Vérifications des éléments
+    console.log('fileInput:', fileInput);
+    console.log('uploadArea:', uploadArea);
+    console.log('uploadButton:', uploadButton);
+    console.log('selectFilesButton:', selectFilesButton);
+    console.log('filePreview:', filePreview);
+    console.log('fileList:', fileList);
+    
+    let selectedFiles = [];
+    
+    // Gestion du clic sur la zone d'upload
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    // Gestion du clic sur le bouton de sélection
+    if (selectFilesButton) {
+        selectFilesButton.addEventListener('click', function(e) {
+            e.preventDefault(); // Empêcher le comportement par défaut du bouton
+            e.stopPropagation(); // Empêcher la propagation de l'événement
+            console.log('Bouton sélectionner des fichiers cliqué');
+            
+            if (fileInput) {
+                console.log('Ouverture du sélecteur de fichiers');
+                fileInput.click();
+            } else {
+                console.error('fileInput est null, tentative de recherche alternative');
+                // Tentative de recherche alternative
+                const altFileInput = document.querySelector('input[type="file"]');
+                if (altFileInput) {
+                    console.log('Input file alternatif trouvé, ouverture du sélecteur');
+                    altFileInput.click();
+                } else {
+                    console.error('Aucun input file trouvé sur la page');
+                }
+            }
+        });
+    } else {
+        console.error('Bouton select-files-button non trouvé');
+    }
+    
+    // Gestion du drag & drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleFiles(files);
+    });
+    
+    // Gestion de la sélection de fichiers
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            console.log('Fichiers sélectionnés via input:', this.files.length);
+            const files = Array.from(this.files);
+            handleFiles(files);
+        });
+    } else {
+        console.error('Impossible d\'attacher l\'event change - fileInput est null');
+        // Tentative d\'attachement sur tous les inputs file
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.type === 'file' && e.target.classList.contains('csc-file-input-field')) {
+                console.log('Fichiers sélectionnés via délégation:', e.target.files.length);
+                const files = Array.from(e.target.files);
+                handleFiles(files);
+            }
+        });
+    }
+    
+    function handleFiles(files) {
+        console.log('handleFiles appelée avec', files.length, 'fichiers');
+        selectedFiles = files;
+        
+        if (files.length > 0) {
+            console.log('Affichage de la prévisualisation et activation du bouton');
+            displayFilePreview(files);
+            updateUploadButton(true);
+        } else {
+            console.log('Aucun fichier, masquage de la prévisualisation');
+            hideFilePreview();
+            updateUploadButton(false);
+        }
+    }
+    
+    function displayFilePreview(files) {
+        fileList.innerHTML = '';
+        
+        files.forEach(function(file, index) {
+            const listItem = document.createElement('div');
+            listItem.className = 'item';
+            
+            const isImage = file.type.startsWith('image/');
+            const fileSize = (file.size / 1024).toFixed(1);
+            
+            let previewContent = '';
+            if (isImage) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = listItem.querySelector('.preview-image');
+                    if (img) {
+                        img.src = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+                
+                previewContent = `
+                    <div class="ui small image" style="margin-top: 10px;">
+                        <img class="preview-image" src="" alt="${file.name}" style="max-width: 150px; max-height: 100px; border-radius: 5px;">
+                    </div>
+                `;
+            }
+            
+            listItem.innerHTML = `
+                <div class="right floated content">
+                    <span class="ui small label">${fileSize} KB</span>
+                    <button type="button" class="ui mini red button" onclick="removeFile(${index})">
+                        <i class="trash icon"></i>
+                    </button>
+                </div>
+                <i class="${isImage ? 'image' : 'file pdf'} icon"></i>
+                <div class="content">
+                    <div class="header">${file.name}</div>
+                    <div class="description">Type: ${file.type || 'Inconnu'}</div>
+                    ${previewContent}
+                </div>
+            `;
+            
+            fileList.appendChild(listItem);
+        });
+        
+        filePreview.style.display = 'block';
+    }
+    
+    function hideFilePreview() {
+        filePreview.style.display = 'none';
+    }
+    
+    function updateUploadButton(hasFiles) {
+        uploadButton.disabled = !hasFiles;
+    }
+    
+    // Fonction globale pour supprimer un fichier
+    window.removeFile = function(index) {
+        selectedFiles.splice(index, 1);
+        
+        // Mettre à jour l'input file
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        fileInput.files = dt.files;
+        
+        if (selectedFiles.length > 0) {
+            displayFilePreview(selectedFiles);
+        } else {
+            hideFilePreview();
+            updateUploadButton(false);
+        }
+    };
+});
+</script>
+
 {% endblock %}

@@ -20,7 +20,7 @@ class CscController extends AbstractController
     ) {
     }
 
-    #[Route('/csc', name: 'shop_account_csc')]
+    #[Route('/compensations-editeurs', name: 'shop_account_csc')]
     #[IsGranted('ROLE_USER')]
     public function list(): Response
     {
@@ -43,12 +43,12 @@ class CscController extends AbstractController
             $formattedCscs = [];
         }
 
-        return $this->render('shop/csc/list.html.twig', [
+        return $this->render('shop/csc/listeCsc.html.twig', [
             'cscs' => $formattedCscs,
         ]);
     }
 
-    #[Route('/csc/{reference}', name: 'shop_account_csc_detail')]
+    #[Route('/compensations-editeurs/{reference}', name: 'shop_account_csc_detail')]
     #[IsGranted('ROLE_USER')]
     public function detail(string $reference): Response
     {
@@ -79,7 +79,7 @@ class CscController extends AbstractController
             }, array_keys($csc['tabproduits']), $csc['tabproduits'])
         ];
 
-        return $this->render('shop/csc/detail.html.twig', [
+        return $this->render('shop/csc/detailCsc.html.twig', [
             'csc' => $formattedCsc,
         ]);
     }

@@ -9,8 +9,11 @@ use App\Service\CustomerCscService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Form\Shop\CscFilterType;
+use App\Form\Shop\CscSearchType;
 
 #[Route('/mon-compte')]
 class CscController extends AbstractController
@@ -22,8 +25,14 @@ class CscController extends AbstractController
 
     #[Route('/compensations-editeurs', name: 'shop_account_csc')]
     #[IsGranted('ROLE_USER')]
-    public function list(): Response
+    public function list(Request $request): Response
     {
+        // Créer le formulaire de recherche
+        $searchForm = $this->createForm(CscSearchType::class, null, [
+            'method' => 'GET'
+        ]);
+        $searchForm->handleRequest($request);
+
         // Charger les données JSON de test
         $jsonFile = __DIR__ . '/../../DataFixtures/data/customer_csc.json';
         if (file_exists($jsonFile)) {
@@ -39,12 +48,41 @@ class CscController extends AbstractController
                     'statut' => $csc['statutClient']
                 ];
             }
+
+            // Appliquer les filtres si le formulaire est soumis
+            if ($searchForm->isSubmitted() && $searchForm->isValid()) {
+                $criteria = $searchForm->getData();
+                
+                if (!empty($criteria['statut'])) {
+                    $formattedCscs = array_filter($formattedCscs, function($csc) use ($criteria) {
+                        return $csc['statut'] === $criteria['statut'];
+                    });
+                }
+            }
+
+            // Gérer le tri
+            $sort = $request->query->get('sort', 'dateDebut');
+            $direction = $request->query->get('direction', 'asc');
+
+            usort($formattedCscs, function($a, $b) use ($sort, $direction) {
+                $valueA = $a[$sort] instanceof \DateTime ? $a[$sort]->getTimestamp() : $a[$sort];
+                $valueB = $b[$sort] instanceof \DateTime ? $b[$sort]->getTimestamp() : $b[$sort];
+                
+                return $direction === 'asc' 
+                    ? ($valueA <=> $valueB)
+                    : ($valueB <=> $valueA);
+            });
         } else {
             $formattedCscs = [];
+            $sort = 'dateDebut';
+            $direction = 'asc';
         }
 
         return $this->render('shop/csc/listeCsc.html.twig', [
             'cscs' => $formattedCscs,
+            'form' => $searchForm->createView(),
+            'current_sort' => $sort,
+            'current_direction' => $direction
         ]);
     }
 

@@ -1,47 +1,105 @@
-{% extends 'shop/layout.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Mes CSC | {{ parent() }}{% endblock %}
+{% block title %}Compensations éditeurs | {{ parent() }}{% endblock %}
 
-{% block content %}
+{% block breadcrumb %}
+<div class="ui breadcrumb">
+    <a href="{{ path('app_shop_account') }}" class="section">Mon Compte</a>
+    <i class="right angle icon divider"></i>
+    <div class="active section">Compensations éditeurs</div>
+</div>
+{% endblock %}
+
+{% block subcontent %}
+<div class="ui segment">
+    <h1 class="ui dividing header">Compensations éditeurs</h1>
+    
+    {% for message in app.flashes('success') %}
+        <div class="ui positive message">
+            {{ message }}
+        </div>
+    {% endfor %}
+
     <div class="ui segment">
-        <h1 class="ui dividing header">Mes Compensations Éditeurs (CSC)</h1>
-        
-        {% if cscs is empty %}
-            <div class="ui info message">
-                <p>Vous n'avez pas encore de compensations éditeurs.</p>
+        <h2 class="ui header">Filtres de recherche</h2>
+        {{ form_start(form, {'attr': {'class': 'ui form'}}) }}
+            <div class="two fields">
+                {{ form_row(form.statut) }}
+                {{ form_row(form.produit) }}
             </div>
-        {% else %}
-            <table class="ui celled table">
+            <button class="ui blue labeled icon button" type="submit">
+                <i class="search icon"></i>
+                Filtrer
+            </button>
+        {{ form_end(form) }}
+    </div>
+
+    {% if cscs|length > 0 %}
+        <div class="ui segment">
+            <h2 class="ui header">Liste des compensations</h2>
+            <table class="ui celled striped table">
                 <thead>
                     <tr>
-                        <th>Numéro CSC</th>
-                        <th>Date d'ouverture</th>
-                        <th>Date de clôture</th>
-                        <th>Statut</th>
+                        <th class="sorted {{ current_sort == 'dateDebut' ? current_direction : '' }}">
+                            <a href="{{ path('shop_account_csc', {'sort': 'dateDebut', 'direction': current_sort == 'dateDebut' and current_direction == 'asc' ? 'desc' : 'asc'}) }}">
+                                Date de début
+                                <i class="sort icon"></i>
+                            </a>
+                        </th>
+                        <th class="sorted {{ current_sort == 'dateFin' ? current_direction : '' }}">
+                            <a href="{{ path('shop_account_csc', {'sort': 'dateFin', 'direction': current_sort == 'dateFin' and current_direction == 'asc' ? 'desc' : 'asc'}) }}">
+                                Date de clôture
+                                <i class="sort icon"></i>
+                            </a>
+                        </th>
+                        <th class="sorted {{ current_sort == 'statut' ? current_direction : '' }}">
+                            <a href="{{ path('shop_account_csc', {'sort': 'statut', 'direction': current_sort == 'statut' and current_direction == 'asc' ? 'desc' : 'asc'}) }}">
+                                Statut
+                                <i class="sort icon"></i>
+                            </a>
+                        </th>
+                        <th class="sorted {{ current_sort == 'reference' ? current_direction : '' }}">
+                            <a href="{{ path('shop_account_csc', {'sort': 'reference', 'direction': current_sort == 'reference' and current_direction == 'asc' ? 'desc' : 'asc'}) }}">
+                                Numéro CSC
+                                <i class="sort icon"></i>
+                            </a>
+                        </th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for csc in cscs %}
                         <tr>
-                            <td>{{ csc.reference }}</td>
                             <td>{{ csc.dateDebut|date('d/m/Y') }}</td>
                             <td>{{ csc.dateFin|date('d/m/Y') }}</td>
                             <td>
-                                <div class="ui label {% if csc.statut == 'Ouverte' %}blue{% elseif csc.statut == 'Déclarée' %}green{% elseif csc.statut == 'Clôturée' %}grey{% else %}yellow{% endif %}">
-                                    {{ csc.statut }}
-                                </div>
+                                {% if csc.statut == 'Ouverte' %}
+                                    <div class="ui green label">Ouverte</div>
+                                {% elseif csc.statut == 'Clôturée' %}
+                                    <div class="ui grey label">Clôturée</div>
+                                {% else %}
+                                    <div class="ui orange label">{{ csc.statut }}</div>
+                                {% endif %}
                             </td>
-                            <td class="center aligned">
-                                <a href="{{ path('shop_account_csc_detail', {'reference': csc.reference}) }}" class="ui icon primary button" title="Voir le détail">
+                            <td>
+                                <a href="{{ path('shop_account_csc_detail', {'reference': csc.reference}) }}">{{ csc.reference }}</a>
+                            </td>
+                            <td>
+                                <a href="{{ path('shop_account_csc_detail', {'reference': csc.reference}) }}" class="ui labeled icon button">
                                     <i class="eye icon"></i>
-                                    Voir détail
+                                    Voir
                                 </a>
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        {% endif %}
-    </div>
+        </div>
+    {% else %}
+        <div class="ui info message">
+            <div class="header">Aucun résultat</div>
+            <p>Aucune compensation ne correspond à vos critères de recherche.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

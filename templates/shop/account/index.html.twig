@@ -1,29 +1,36 @@
-{% extends 'shop/layout.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Mon Compte | {{ parent() }}{% endblock %}
 
-{% block content %}
-    <div class="ui segment">
-        <h1 class="ui dividing header">Mon Compte</h1>
-        
-        <div class="ui segment">
-            <h2 class="ui header">Informations du compte</h2>
-            <div class="ui list">
-                <div class="item">
+{% block subcontent %}
+<div class="ui segment">
+    <h1 class="ui dividing header">Mon Compte</h1>
+    
+    <div class="ui two column stackable grid">
+        <div class="ten wide column">
+            <div class="ui segment">
+                <h2 class="ui header">
                     <i class="user icon"></i>
                     <div class="content">
-                        <div class="header">Nom d'utilisateur</div>
-                        <div class="description">{{ user.username }}</div>
+                        Informations du compte
                     </div>
-                </div>
-                <div class="item">
-                    <i class="mail icon"></i>
-                    <div class="content">
-                        <div class="header">Email</div>
-                        <div class="description">{{ user.email }}</div>
+                </h2>
+                <div class="ui relaxed divided list">
+                    <div class="item">
+                        <i class="user icon"></i>
+                        <div class="content">
+                            <div class="header">Nom d'utilisateur</div>
+                            <div class="description">{{ user.username }}</div>
+                        </div>
                     </div>
-                </div>
-                {% if user.customer %}
+                    <div class="item">
+                        <i class="mail icon"></i>
+                        <div class="content">
+                            <div class="header">Email</div>
+                            <div class="description">{{ user.email }}</div>
+                        </div>
+                    </div>
+                    {% if user.customer %}
                     <div class="item">
                         <i class="address card icon"></i>
                         <div class="content">
@@ -38,20 +45,31 @@
                             <div class="description">{{ user.customer.phoneNumber ?: 'Non renseigné' }}</div>
                         </div>
                     </div>
-                {% endif %}
+                    {% endif %}
+                </div>
             </div>
         </div>
-
-        <div class="ui segment">
-            <h2 class="ui header">Mes services</h2>
-            <div class="ui list">
-                <div class="item">
-                    <a href="{{ path('shop_account_csc') }}" class="ui button primary">
+        
+        <div class="six wide column">
+            <div class="ui segment">
+                <h2 class="ui header">
+                    <i class="grid layout icon"></i>
+                    <div class="content">
+                        Mes services
+                    </div>
+                </h2>
+                <div class="ui fluid vertical menu">
+                    <a href="{{ path('shop_account_csc') }}" class="item">
                         <i class="euro sign icon"></i>
                         Mes Compensations Éditeurs (CSC)
                     </a>
                 </div>
+                <div class="ui info message">
+                    <i class="info circle icon"></i>
+                    Consultez vos compensations éditeurs et suivez leur statut.
+                </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}

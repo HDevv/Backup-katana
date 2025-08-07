@@ -58,6 +58,23 @@ class CscController extends AbstractController
                         return $csc['statut'] === $criteria['statut'];
                     });
                 }
+                
+                if (!empty($criteria['referenceProduit'])) {
+                    $formattedCscs = array_filter($formattedCscs, function($csc) use ($criteria, $cscData) {
+                        $reference = $csc['reference'];
+                        if (isset($cscData[$reference]['tabproduits'])) {
+                            $produits = $cscData[$reference]['tabproduits'];
+                            foreach (array_keys($produits) as $refProduit) {
+                                // Convertir en chaîne pour éviter l'erreur stripos
+                                $refProduitStr = (string) $refProduit;
+                                if (stripos($refProduitStr, $criteria['referenceProduit']) !== false) {
+                                    return true;
+                                }
+                            }
+                        }
+                        return false;
+                    });
+                }
             }
 
             // Gérer le tri

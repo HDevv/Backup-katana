@@ -6,6 +6,7 @@ namespace App\Form\Shop;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -31,6 +32,14 @@ class CscSearchType extends AbstractType
                 'placeholder' => 'Tous les produits',
                 'choices' => [],  // À remplir avec les produits disponibles
                 'attr' => ['class' => 'ui dropdown']
+            ])
+            ->add('referenceProduit', TextType::class, [
+                'label' => 'Référence produit',
+                'required' => false,
+                'attr' => [
+                    'class' => 'ui input',
+                    'placeholder' => 'Rechercher par référence produit...'
+                ]
             ]);
     }
 

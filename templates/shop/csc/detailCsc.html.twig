@@ -27,62 +27,84 @@
                 {% endif %}
             </h1>
         </div>
-        <div class="four wide column">
+        <div class="four wide column right aligned">
             <a href="{{ path('shop_account_csc') }}" class="ui labeled icon button">
                 <i class="left arrow icon"></i>
                 Retour à la liste
             </a>
         </div>
     </div>
+
     <div class="ui info message">
         <i class="calendar icon"></i>
         <strong>Période :</strong> Du {{ csc.dateDebut|date('d/m/Y') }} au {{ csc.dateFin|date('d/m/Y') }}
     </div>
 
+    {% for message in app.flashes('success') %}
+        <div class="ui positive message">
+            {{ message }}
+        </div>
+    {% endfor %}
+
     <div class="ui segment">
         <h2 class="ui header">Détail des produits</h2>
-        <table class="ui celled striped table">
-            <thead>
-                <tr>
-                    <th>Référence</th>
-                    <th>Produit</th>
-                    <th class="right aligned">Prix avant</th>
-                    <th class="right aligned">Prix après</th>
-                    <th class="right aligned">Quantité</th>
-                    <th class="right aligned">Économie totale</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% set totalEconomie = 0 %}
-                {% for produit in csc.produits %}
-                    {% set economie = produit.qteClient * (produit.prixAvant - produit.prixApres) %}
-                    {% set totalEconomie = totalEconomie + economie %}
+
+        <form method="post" action="{{ path('shop_account_csc_save_quantity', {'reference': csc.reference}) }}" class="ui form">
+            <table class="ui celled striped table">
+                <thead>
                     <tr>
-                        <td><strong>{{ produit.reference }}</strong></td>
-                        <td>{{ produit.libprod }}</td>
-                        <td class="right aligned">{{ produit.prixAvant|number_format(2, ',', ' ') }} €</td>
-                        <td class="right aligned"><strong>{{ produit.prixApres|number_format(2, ',', ' ') }} €</strong></td>
-                        <td class="right aligned">
-                            <div class="ui label">{{ produit.qteClient }}</div>
-                        </td>
-                        <td class="right aligned">
-                            {% if produit.qteClient > 0 %}
-                                {% if economie > 0 %}
+                        <th>Référence</th>
+                        <th>Produit</th>
+                        <th class="right aligned">Prix avant</th>
+                        <th class="right aligned">Prix après</th>
+                        <th class="right aligned">Quantité</th>
+                        <th class="right aligned">Économie totale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set totalEconomie = 0 %}
+                    {% for produit in csc.produits %}
+                        {% set economie = produit.qteClient * (produit.prixAvant - produit.prixApres) %}
+                        {% set totalEconomie = totalEconomie + economie %}
+                        <tr>
+                            <td><strong>{{ produit.reference }}</strong></td>
+                            <td>{{ produit.libprod }}</td>
+                            <td class="right aligned">{{ produit.prixAvant|number_format(2, ',', ' ') }} €</td>
+                            <td class="right aligned"><strong>{{ produit.prixApres|number_format(2, ',', ' ') }} €</strong></td>
+                            <td class="right aligned">
+                                {% if csc.statut == 'Clôturée' %}
+                                    <div class="ui label">{{ produit.qteClient }}</div>
+                                {% else %}
+                                    <input type="number"
+                                           name="quantites[{{ produit.reference }}]"
+                                           value="{{ produit.qteClient }}"
+                                           min="0"
+                                           class="ui input mini"
+                                           style="width: 80px;" />
+                                {% endif %}
+                            </td>
+                            <td class="right aligned">
+                                {% if produit.qteClient > 0 %}
                                     <div class="ui green label">
                                         {{ economie|number_format(2, ',', ' ') }} €
                                     </div>
                                 {% else %}
-                                    0,00 €
+                                    -
                                 {% endif %}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if csc.statut != 'Clôturée' %}
+                <button type="submit" class="ui primary button">
+                    <i class="save icon"></i> Enregistrer
+                </button>
+            {% endif %}
+        </form>
     </div>
+
     {% if totalEconomie > 0 %}
         <div class="ui positive message">
             <i class="calculator icon"></i>
@@ -90,4 +112,39 @@
         </div>
     {% endif %}
 </div>
+
+
+    <script>
+document.querySelectorAll('.input-quantite').forEach(input => {
+    input.addEventListener('change', function () {
+        const referenceCSC = this.dataset.csc;
+        const referenceProduit = this.dataset.produit;
+        const quantite = this.value;
+
+        fetch('{{ path("shop_account_csc_update_quantity") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                referenceCSC,
+                referenceProduit,
+                quantite
+            })
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Erreur lors de la mise à jour');
+        }).then(data => {
+            console.log('Quantité mise à jour avec succès', data);
+        }).catch(err => {
+            alert('Erreur : ' + err.message);
+        });
+    });
+});
+</script>
+
 {% endblock %}
+

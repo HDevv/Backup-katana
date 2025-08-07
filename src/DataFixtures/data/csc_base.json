@@ -1,0 +1,54 @@
+{
+    "CSC019-25": {
+      "Datedebut": "20250101",
+      "DateFin": "20250930",
+      "tabproduits": {
+        "75539000011": { "libprod": "PRODUIT 1", "prixAvant": 22.85, "prixApres": 17.25, "qteClient": 0 },
+        "75539000021": { "libprod": "PRODUIT 2", "prixAvant": 24.85, "prixApres": 15.45, "qteClient": 0 },
+        "75539000031": { "libprod": "PRODUIT 3", "prixAvant": 23.85, "prixApres": 12.36, "qteClient": 0 }
+      }
+    },
+    "CSC018-25": {
+      "Datedebut": "20250201",
+      "DateFin": "20250630",
+      "tabproduits": {
+        "45539000011": { "libprod": "ARTICLE 1", "prixAvant": 32.85, "prixApres": 27.25, "qteClient": 0 },
+        "45539000021": { "libprod": "ARTICLE 2", "prixAvant": 34.85, "prixApres": 25.45, "qteClient": 5 },
+        "45539000031": { "libprod": "ARTICLE 3", "prixAvant": 33.85, "prixApres": 22.36, "qteClient": 12 }
+      }
+    },
+    "CSC020-25": {
+      "Datedebut": "20250601",
+      "DateFin": "20251231",
+      "tabproduits": {
+        "99939000001": { "libprod": "NOUVEAU PRODUIT A", "prixAvant": 45.00, "prixApres": 30.00, "qteClient": 3 },
+        "99939000002": { "libprod": "NOUVEAU PRODUIT B", "prixAvant": 50.00, "prixApres": 35.00, "qteClient": 0 },
+        "99939000003": { "libprod": "NOUVEAU PRODUIT C", "prixAvant": 28.99, "prixApres": 19.99, "qteClient": 1 }
+      }
+    },
+    "CSC021-25": {
+      "Datedebut": "20250701",
+      "DateFin": "20250930",
+      "tabproduits": {
+        "12345000001": { "libprod": "ARTICLE BONUS A", "prixAvant": 19.00, "prixApres": 15.00, "qteClient": 6 },
+        "12345000002": { "libprod": "ARTICLE BONUS B", "prixAvant": 22.50, "prixApres": 18.75, "qteClient": 2 }
+      }
+    },
+    "CSC022-25": {
+      "Datedebut": "20250801",
+      "DateFin": "20251201",
+      "tabproduits": {
+        "88888000001": { "libprod": "SUPPORT TECH", "prixAvant": 99.99, "prixApres": 79.99, "qteClient": 1 },
+        "88888000002": { "libprod": "FORMATION", "prixAvant": 149.00, "prixApres": 129.00, "qteClient": 0 }
+      }
+    },
+    "CSC023-25": {
+      "Datedebut": "20250115",
+      "DateFin": "20250515",
+      "tabproduits": {
+        "77777000001": { "libprod": "ANCIEN PRODUIT X", "prixAvant": 59.99, "prixApres": 49.99, "qteClient": 4 },
+        "77777000002": { "libprod": "ANCIEN PRODUIT Y", "prixAvant": 89.00, "prixApres": 70.00, "qteClient": 0 }
+      }
+    }
+  }
+  

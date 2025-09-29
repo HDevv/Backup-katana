@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller\Shop;
 
+
 use App\Form\Shop\CscSearchType;
 use App\Form\Shop\CscFileUploadType;
 use App\Service\CscFileUploadService;
@@ -99,13 +100,12 @@ class CscController extends AbstractController
     }
 
     // =======================================
-    //  DÉTAIL D'UNE CSC
+    //  DÉTAIL D'UNE CSC (GET/POST)
     // =======================================
-    #[Route('/compensations-editeurs/{reference}', name: 'shop_account_csc_detail')]
+    #[Route('/compensations-editeurs/{reference}', name: 'shop_account_csc_detail', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
-    public function detail(string $reference): Response
+    public function detail(Request $request, string $reference, CustomerCscService $customerCscService): Response
     {
-
         // récupération des fichiers JSON
         $user = $this->getUser();
         $userId = $user->getId();
@@ -120,6 +120,33 @@ class CscController extends AbstractController
             throw $this->createNotFoundException('CSC non trouvée');
         }
 
+        // Traitement POST : enregistrement des quantités
+        if ($request->isMethod('POST')) {
+            // Récupère toutes les quantités depuis le formulaire 
+            $quantites = $request->request->all('quantites');
+
+            if (!isset($userData[$reference])) {
+                throw $this->createNotFoundException('CSC inconnue');
+            }
+
+            // Met à jour les quantités de chaque produit
+            foreach ($quantites as $refProduit => $qte) {
+                $qte = max(0, (int) $qte);
+                if (isset($userData[$reference]['tabproduits'][$refProduit])) {
+                    $userData[$reference]['tabproduits'][$refProduit]['qteClient'] = $qte;
+                }
+            }
+
+            // Sauvegarde en BDD et dans fichier JSON
+            $customerCscService->updateUserCsc($user, $userData);
+            file_put_contents($userFile, json_encode($userData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+            $this->addFlash('success', 'Les quantités ont bien été enregistrées.');
+
+            return $this->redirectToRoute('shop_account_csc_detail', ['reference' => $reference]);
+        }
+
+        // Traitement GET : affichage du détail
         $baseCsc = $baseData[$reference];
         $userCsc = $userData[$reference] ?? [];
 
@@ -147,42 +174,6 @@ class CscController extends AbstractController
         ]);
     }
 
-    // =======================================
-    //  ENREGISTREMENT DES QUANTITÉS (FORMULAIRE POST)
-    // =======================================
-    #[Route('/compensations-editeurs/{reference}/enregistrer', name: 'shop_account_csc_save_quantity', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
-    public function saveQuantity(Request $request, string $reference, CustomerCscService $customerCscService): Response
-    {
-        $user = $this->getUser();
-        $userId = $user->getId();
-
-        // Récupère toutes les quantités depuis le formlaire 
-        $quantites = $request->request->all('quantites');
-        $userFile = $this->getUserFilePath($userId);
-
-        $userData = $this->readJsonFile($userFile);
-
-        if (!isset($userData[$reference])) {
-            throw $this->createNotFoundException('CSC inconnue');
-        }
-
-        // Met à jour les quantités de chaque produit
-        foreach ($quantites as $refProduit => $qte) {
-            $qte = max(0, (int) $qte);
-            if (isset($userData[$reference]['tabproduits'][$refProduit])) {
-                $userData[$reference]['tabproduits'][$refProduit]['qteClient'] = $qte;
-            }
-        }
-
-        // Sauvegarde en BDD et dans fichier JSON
-        $customerCscService->updateUserCsc($user, $userData);
-        file_put_contents($userFile, json_encode($userData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-        $this->addFlash('success', 'Les quantités ont bien été enregistrées.');
-
-        return $this->redirectToRoute('shop_account_csc_detail', ['reference' => $reference]);
-    }
 
     // =======================================
     //  ENREGISTREMENT DES QUANTITÉS (AJAX)

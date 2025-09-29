@@ -37,7 +37,7 @@
 
     <div class="ui info message">
         <i class="calendar icon"></i>
-        <strong>Période :</strong> Du {{ csc.dateDebut|date('d/m/Y') }} au {{ csc.dateFin|date('d/m/Y') }}
+        <strong>Période déclaration:</strong> Du {{ csc.dateDebut|date('d/m/Y') }} au {{ csc.dateFin|date('d/m/Y') }}
     </div>
 
     {% for message in app.flashes('success') %}
@@ -49,7 +49,7 @@
     <div class="ui segment">
         <h2 class="ui header">Détail des produits</h2>
 
-        <form method="post" action="{{ path('shop_account_csc_save_quantity', {'reference': csc.reference}) }}" class="ui form">
+        <form method="post" action="{{ path('shop_account_csc_detail', {'reference': csc.reference}) }}" class="ui form">
             <table class="ui celled striped table">
                 <thead>
                     <tr>
@@ -58,7 +58,7 @@
                         <th class="right aligned">Prix avant</th>
                         <th class="right aligned">Prix après</th>
                         <th class="right aligned">Quantité</th>
-                        <th class="right aligned">Économie totale</th>
+                        <th class="right aligned">Montant Compensation</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -108,7 +108,7 @@
     {% if totalEconomie > 0 %}
         <div class="ui positive message">
             <i class="calculator icon"></i>
-            <strong>Économie totale : {{ totalEconomie|number_format(2, ',', ' ') }} €</strong>
+            <strong>Montant total compensé : {{ totalEconomie|number_format(2, ',', ' ') }} €</strong>
         </div>
     {% endif %}
 </div>

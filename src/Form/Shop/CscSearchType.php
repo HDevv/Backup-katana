@@ -26,13 +26,6 @@ class CscSearchType extends AbstractType
                 ],
                 'attr' => ['class' => 'ui dropdown']
             ])
-            ->add('produit', ChoiceType::class, [
-                'label' => 'Produit',
-                'required' => false,
-                'placeholder' => 'Tous les produits',
-                'choices' => [],  // À remplir avec les produits disponibles
-                'attr' => ['class' => 'ui dropdown']
-            ])
             ->add('referenceProduit', TextType::class, [
                 'label' => 'Référence produit',
                 'required' => false,

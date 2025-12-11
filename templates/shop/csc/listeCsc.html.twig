@@ -34,6 +34,38 @@
         {{ form_end(form) }}
     </div>
 
+    {# URL du webservice pour test #}
+    {% if csc_liste_url is defined %}
+        <div class="ui segment">
+            <h3 class="ui header">
+                <i class="linkify icon"></i>
+                URL Webservice CSC Liste
+            </h3>
+            <p>
+                <a href="{{ csc_liste_url }}" target="_blank" class="ui blue button">
+                    <i class="external icon"></i>
+                    Ouvrir l'URL CSC Liste (Client: {{ code_client }})
+                </a>
+            </p>
+            <div class="ui message">
+                <code style="word-break: break-all;">{{ csc_liste_url }}</code>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Indicateur de source des données #}
+    {% if using_api_data is defined and using_api_data %}
+        <div class="ui positive message">
+            <i class="cloud icon"></i>
+            <strong>Données en direct du webservice Commando</strong> (Client: {{ code_client }})
+        </div>
+    {% elseif api_error is defined and api_error %}
+        <div class="ui warning message">
+            <i class="warning icon"></i>
+            <strong>Affichage des données locales</strong> - Erreur webservice: {{ api_error }}
+        </div>
+    {% endif %}
+
     {% if cscs|length > 0 %}
         <div class="ui segment">
             <h2 class="ui header">Liste des compensations</h2>

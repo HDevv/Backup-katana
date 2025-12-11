@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Controller\Shop;
 
-
 use App\Form\Shop\CscSearchType;
 use App\Form\Shop\CscFileUploadType;
 use App\Service\CscFileUploadService;
 use App\Service\CustomerCscService;
+use App\Service\CommandoApiService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -32,6 +33,8 @@ class CscController extends AbstractController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private CscFileUploadService $fileUploadService,
+        private CommandoApiService $commandoApi,
+        private ParameterBagInterface $params,
     ) {
     }
 
@@ -87,15 +90,49 @@ class CscController extends AbstractController
             [$uploadedFiles, $uploadMessage] = $this->handleFileUpload($uploadForm);
         }
 
+        // Appel au webservice Commando pour récupérer la liste des CSC
+        $cscFromApi = null;
+        $apiError = null;
+        $codeClient = $this->params->get('commando_default_client');
+        $formattedCscsFromApi = [];
+        
+        // Construction de l'URL pour affichage
+        $cscListeUrl = $this->commandoApi->buildUrl([
+            'act' => 'cscliste',
+            'cli' => $codeClient,
+        ]);
+        
+        try {
+            // Récupération de la liste des CSC depuis l'API
+            $cscFromApi = $this->commandoApi->getCscListe($codeClient);
+            
+            // Transformation des données API vers le format de la vue
+            if (isset($cscFromApi['listeCsc']) && is_array($cscFromApi['listeCsc'])) {
+                // Les quantités sont déjà dans le JSON de cscliste (qteClient)
+                // Formatage des CSC pour la vue
+                $formattedCscsFromApi = $this->formatCscsFromApi($cscFromApi['listeCsc']);
+            }
+        } catch (\Exception $e) {
+            $apiError = $e->getMessage();
+        }
+
+        // Utiliser les données de l'API si disponibles, sinon les fichiers JSON
+        $cscsToDisplay = !empty($formattedCscsFromApi) ? $formattedCscsFromApi : $formattedCscs;
+
         // Affichage de la liste (vue)
         return $this->render('shop/csc/listeCsc.html.twig', [
-            'cscs' => $formattedCscs,
+            'cscs' => $cscsToDisplay,
             'form' => $searchForm->createView(),
             'uploadForm' => $uploadForm->createView(),
             'uploadedFiles' => $uploadedFiles,
             'uploadMessage' => $uploadMessage,
             'current_sort' => $sort,
-            'current_direction' => $direction
+            'current_direction' => $direction,
+            'csc_from_api' => $cscFromApi,
+            'api_error' => $apiError,
+            'code_client' => $codeClient,
+            'using_api_data' => !empty($formattedCscsFromApi),
+            'csc_liste_url' => $cscListeUrl,
         ]);
     }
 
@@ -224,6 +261,51 @@ class CscController extends AbstractController
     private function readJsonFile(string $path): array
     {
         return file_exists($path) ? json_decode(file_get_contents($path), true) : [];
+    }
+
+    /**
+     * Transforme les données de l'API Commando vers le format attendu par la vue
+     * 
+     * @param array $listeCsc Liste des CSC depuis l'API
+     * @return array Format compatible avec la vue
+     */
+    private function formatCscsFromApi(array $listeCsc): array
+    {
+        $result = [];
+        
+        foreach ($listeCsc as $csc) {
+            // Formatage des produits
+            $produits = [];
+            if (isset($csc['tabProduits']) && is_array($csc['tabProduits'])) {
+                foreach ($csc['tabProduits'] as $produit) {
+                    $ref = $produit['reference'] ?? '';
+                    if ($ref) {
+                        $produits[$ref] = [
+                            'desig' => $produit['desig'] ?? '',
+                            'gencode' => $produit['gencode'] ?? '',
+                            'oldPVHT' => (float)($produit['oldPVHT'] ?? 0),
+                            'newPVHT' => (float)($produit['newPVHT'] ?? 0),
+                            'oldPVTTC' => (float)($produit['oldPVTTC'] ?? 0),
+                            'newPVTTC' => (float)($produit['newPVTTC'] ?? 0),
+                            'montantCSC' => (float)($produit['montantCSC'] ?? 0),
+                            'qteClient' => (int)($produit['qteClient'] ?? 0),
+                        ];
+                    }
+                }
+            }
+            
+            // Formatage de la CSC
+            $result[] = [
+                'reference' => $csc['numCsc'] ?? '',
+                'dateDebut' => isset($csc['dateDebut']) ? \DateTime::createFromFormat('Ymd', $csc['dateDebut']) : null,
+                'dateFin' => isset($csc['dateFin']) ? \DateTime::createFromFormat('Ymd', $csc['dateFin']) : null,
+                'statut' => $csc['statutClient'] ?? 'Non défini',
+                'titre' => $csc['titreCSC'] ?? '',
+                'produits' => $produits
+            ];
+        }
+        
+        return $result;
     }
 
     // Fusionne données de base et données utilisateur 

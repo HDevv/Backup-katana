@@ -3,6 +3,11 @@ parameters:
     csc_upload_directory: '%kernel.project_dir%/public/uploads/csc'
     csc_max_file_size: 10485760  # 10MB en octets
     csc_allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png', 'gif']
+    
+    # Configuration Webservice Commando
+    commando_url_base: 'http://192.168.51.44//COMMANDO_WEB_SERVICE_WEB/FR/cdo_get.awp'
+    commando_cle_privee: 'lfLidEMDKdd45s85c2d5'
+    commando_default_client: '00318945'  # Code client par défaut pour les tests
 
 services:
     # Default configuration for services in *this* file
@@ -34,3 +39,9 @@ services:
     App\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
+
+    # Configuration du service Commando API
+    App\Service\CommandoApiService:
+        arguments:
+            $commandoUrlBase: '%commando_url_base%'
+            $commandoClePrivee: '%commando_cle_privee%'
